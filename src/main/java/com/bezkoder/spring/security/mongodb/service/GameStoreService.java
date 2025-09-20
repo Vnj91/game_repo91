@@ -136,16 +136,21 @@ public class GameStoreService {
 
   // Subscription Management
   public SubscriptionResult createSubscription(String username, String subscriptionType, String paymentMethod) {
+    System.out.println("Creating subscription for user: " + username + ", type: " + subscriptionType);
+    
     Optional<UserProfile> userOpt = userProfileRepository.findByUsername(username);
     if (userOpt.isEmpty()) {
+      System.out.println("User not found: " + username);
       return SubscriptionResult.error("User not found");
     }
 
     UserProfile user = userOpt.get();
+    System.out.println("Found user: " + user.getUsername() + ", wallet balance: " + user.getWalletBalance());
 
     // Check if user already has an active subscription
     Optional<Subscription> existingSubscription = subscriptionRepository.findByUserIdAndIsActiveTrue(user.getId());
     if (existingSubscription.isPresent()) {
+      System.out.println("User already has active subscription");
       return SubscriptionResult.error("User already has an active subscription");
     }
 
@@ -163,22 +168,28 @@ public class GameStoreService {
     Subscription subscription = new Subscription(user.getId(), username, subscriptionType, monthlyPrice);
     subscription.setPaymentMethod(paymentMethod);
     subscription = subscriptionRepository.save(subscription);
+    System.out.println("Created subscription with ID: " + subscription.getId());
 
     // Update user profile
     user.setWalletBalance(user.getWalletBalance().subtract(monthlyPrice));
     user.setPremiumMember(true);
     user.setUpdatedAt(LocalDateTime.now());
     userProfileRepository.save(user);
+    System.out.println("Updated user profile, new wallet balance: " + user.getWalletBalance());
 
     return SubscriptionResult.success(subscription);
   }
 
   public Optional<Subscription> getUserSubscription(String username) {
+    System.out.println("Getting subscription for user: " + username);
     Optional<UserProfile> userOpt = userProfileRepository.findByUsername(username);
     if (userOpt.isEmpty()) {
+      System.out.println("User not found when getting subscription: " + username);
       return Optional.empty();
     }
-    return subscriptionRepository.findByUserIdAndIsActiveTrue(userOpt.get().getId());
+    Optional<Subscription> subscription = subscriptionRepository.findByUserIdAndIsActiveTrue(userOpt.get().getId());
+    System.out.println("Found subscription: " + (subscription.isPresent() ? subscription.get().getSubscriptionType() : "None"));
+    return subscription;
   }
 
   public SubscriptionResult cancelSubscription(String username) {

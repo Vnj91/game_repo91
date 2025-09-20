@@ -19,9 +19,9 @@ public class GameStoreDataInitializer implements CommandLineRunner {
 
   @Override
   public void run(String... args) throws Exception {
-    if (gameRepository.count() == 0) {
-      initializeSampleGames();
-    }
+    // Clear existing games and reinitialize with new images
+    gameRepository.deleteAll();
+    initializeSampleGames();
   }
 
   private void initializeSampleGames() {
@@ -48,11 +48,34 @@ public class GameStoreDataInitializer implements CommandLineRunner {
       new Game("The Last of Us Part II", "A story of revenge and redemption", "Naughty Dog", new BigDecimal("59.99"), "Action")
     );
 
-    // Add additional properties to games
+    // Add additional properties to games with better images
+    String[] gameImages = {
+      "https://images.igdb.com/igdb/image/upload/t_cover_big/co2rpf.jpg", // Cyberpunk 2077
+      "https://images.igdb.com/igdb/image/upload/t_cover_big/co1wyy.jpg", // The Witcher 3
+      "https://images.igdb.com/igdb/image/upload/t_cover_big/co1r7j.jpg", // GTA V
+      "https://images.igdb.com/igdb/image/upload/t_cover_big/co1r6y.jpg", // Minecraft
+      "https://images.igdb.com/igdb/image/upload/t_cover_big/co2l4y.jpg", // Among Us
+      "https://images.igdb.com/igdb/image/upload/t_cover_big/co2l4z.jpg", // Fall Guys
+      "https://images.igdb.com/igdb/image/upload/t_cover_big/co2l50.jpg", // Valorant
+      "https://images.igdb.com/igdb/image/upload/t_cover_big/co1r7k.jpg", // League of Legends
+      "https://images.igdb.com/igdb/image/upload/t_cover_big/co2l51.jpg", // Counter-Strike 2
+      "https://images.igdb.com/igdb/image/upload/t_cover_big/co2l52.jpg", // Baldur's Gate 3
+      "https://images.igdb.com/igdb/image/upload/t_cover_big/co2l53.jpg", // Elden Ring
+      "https://images.igdb.com/igdb/image/upload/t_cover_big/co2l54.jpg", // Hogwarts Legacy
+      "https://images.igdb.com/igdb/image/upload/t_cover_big/co2l55.jpg", // Call of Duty
+      "https://images.igdb.com/igdb/image/upload/t_cover_big/co2l56.jpg", // FIFA 24
+      "https://images.igdb.com/igdb/image/upload/t_cover_big/co2l57.jpg", // NBA 2K24
+      "https://images.igdb.com/igdb/image/upload/t_cover_big/co2l58.jpg", // Assassin's Creed
+      "https://images.igdb.com/igdb/image/upload/t_cover_big/co2l59.jpg", // Spider-Man 2
+      "https://images.igdb.com/igdb/image/upload/t_cover_big/co2l5a.jpg", // God of War
+      "https://images.igdb.com/igdb/image/upload/t_cover_big/co2l5b.jpg", // Horizon
+      "https://images.igdb.com/igdb/image/upload/t_cover_big/co2l5c.jpg"  // The Last of Us
+    };
+
     for (int i = 0; i < sampleGames.size(); i++) {
       Game game = sampleGames.get(i);
       game.setPublisher(game.getDeveloper());
-      game.setImageUrl("https://via.placeholder.com/300x400/2a3142/ffffff?text=" + game.getTitle().replace(" ", "+"));
+      game.setImageUrl(i < gameImages.length ? gameImages[i] : "https://via.placeholder.com/300x400/2a3142/ffffff?text=" + game.getTitle().replace(" ", "+"));
       game.setRating(4.0 + (i % 5) * 0.2); // Random rating between 4.0-4.8
       game.setReviewCount(100 + (i * 50)); // Varying review counts
       game.setTags(Arrays.asList(game.getCategory().toLowerCase(), "popular", "trending"));

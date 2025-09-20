@@ -1,166 +1,500 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="GameStore - Your Digital Gaming Hub. Buy games, manage subscriptions, and track your gaming journey with Spring Boot & MongoDB Atlas.">
+  <meta name="keywords" content="gaming, game store, digital games, subscriptions, gaming platform">
   <title>GameStore - Your Digital Gaming Hub</title>
+  
+  <!-- Preload critical resources -->
+  <link rel="preload" href="/styles.css" as="style">
+  <link rel="preload" href="/app.js" as="script">
+  
+  <!-- Styles -->
   <link rel="stylesheet" href="/styles.css">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+  
+  <!-- Theme color for mobile browsers -->
+  <meta name="theme-color" content="#667eea">
 </head>
 <body>
-  <header class="container">
-    <h1>🎮 GameStore</h1>
-    <div class="auth">
-      <input id="playerName" type="text" placeholder="Enter your username" maxlength="24">
-      <button id="createProfileBtn">Create Profile</button>
-      <span id="authStatus"></span>
+  <!-- Skip to main content for accessibility -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  
+  <!-- Loading Screen -->
+  <div id="loading-screen" class="loading-screen" role="status" aria-label="Loading application">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>Loading GameStore...</p>
+    </div>
+  </div>
+
+  <!-- Magnetic Cursor -->
+  <div class="magnetic-cursor" id="magnetic-cursor" aria-hidden="true"></div>
+
+  <!-- Liquid Blob Background Elements -->
+  <div class="liquid-blob" aria-hidden="true"></div>
+  <div class="liquid-blob" aria-hidden="true"></div>
+  <div class="liquid-blob" aria-hidden="true"></div>
+
+  <!-- Particle System -->
+  <div id="particles" aria-hidden="true"></div>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confetti" aria-hidden="true"></canvas>
+
+  <!-- Header -->
+  <header class="header" role="banner">
+    <div class="container">
+      <div class="header-content">
+        <!-- Logo -->
+        <div class="logo-container">
+          <h1 class="logo" tabindex="0" role="button" aria-label="GameStore Home">
+            <span class="logo-icon" aria-hidden="true">🎮</span>
+            <span class="logo-text">GameStore</span>
+          </h1>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="nav" role="navigation" aria-label="Main navigation">
+          <ul class="nav-list">
+            <li class="nav-item">
+              <button class="nav-link active" data-section="store" aria-current="page" aria-describedby="store-desc">
+                <span class="nav-icon" aria-hidden="true">🛒</span>
+                <span class="nav-text">Store</span>
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link" data-section="profile" aria-describedby="profile-desc">
+                <span class="nav-icon" aria-hidden="true">👤</span>
+                <span class="nav-text">Profile</span>
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link" data-section="subscription" aria-describedby="subscription-desc">
+                <span class="nav-icon" aria-hidden="true">💎</span>
+                <span class="nav-text">Subscription</span>
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link" data-section="library" aria-describedby="library-desc">
+                <span class="nav-icon" aria-hidden="true">🎯</span>
+                <span class="nav-text">My Games</span>
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link" data-section="analytics" aria-describedby="analytics-desc">
+                <span class="nav-icon" aria-hidden="true">📊</span>
+                <span class="nav-text">Analytics</span>
+              </button>
+            </li>
+          </ul>
+        </nav>
+
+        <!-- User Authentication -->
+        <div class="auth-section" role="region" aria-label="User authentication">
+          <div class="auth-form" id="auth-form">
+            <div class="form-group">
+              <label for="playerName" class="form-label">Username</label>
+              <input 
+                id="playerName" 
+                type="text" 
+                class="form-input" 
+                placeholder="Enter your username" 
+                maxlength="24"
+                minlength="3"
+                required
+                aria-describedby="username-help"
+                autocomplete="username"
+              >
+              <div id="username-help" class="form-help">Choose a unique username (3-24 characters)</div>
+            </div>
+            <button 
+              id="createProfileBtn" 
+              class="btn btn-primary magnetic-btn"
+              aria-describedby="create-profile-help"
+            >
+              <span class="btn-text">Create Profile</span>
+              <span class="btn-loading" aria-hidden="true">Creating...</span>
+            </button>
+            <div id="create-profile-help" class="form-help">Create your gaming profile to start shopping</div>
+          </div>
+          
+          <div class="user-info" id="user-info" style="display: none;">
+            <div class="user-welcome">
+              <span class="user-avatar" aria-hidden="true">👤</span>
+              <span class="user-name" id="current-user-name"></span>
+            </div>
+            <button id="logoutBtn" class="btn btn-secondary" aria-label="Logout">
+              <span class="btn-text">Logout</span>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </header>
 
-  <main class="container">
-    <!-- User Profile Section -->
-    <section class="panel" id="profilePanel" style="display: none;">
-      <div class="panel-header">
-        <h2>👤 My Profile</h2>
-        <button id="refreshProfileBtn">Refresh</button>
-      </div>
-      <div id="profileContent" class="profile-content">
-        <div class="profile-stats">
-          <div class="stat">
-            <span class="stat-label">Wallet Balance</span>
-            <span id="walletBalance" class="stat-value">$0.00</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">Games Owned</span>
-            <span id="gamesOwned" class="stat-value">0</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">Total Spent</span>
-            <span id="totalSpent" class="stat-value">$0.00</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">Premium Member</span>
-            <span id="premiumStatus" class="stat-value">No</span>
-          </div>
+  <!-- Main Content -->
+  <main id="main-content" class="main-content" role="main">
+    <div class="container">
+      
+      <!-- System Status Bar -->
+      <div id="system-status" class="system-status" role="status" aria-live="polite" aria-atomic="true">
+        <div class="status-content">
+          <span class="status-icon" aria-hidden="true">ℹ️</span>
+          <span class="status-text">Welcome to GameStore! Create a profile to get started.</span>
         </div>
-        <div class="wallet-actions">
-          <input id="walletAmount" type="number" placeholder="Amount" step="0.01" min="0">
-          <button id="addWalletBtn">Add to Wallet</button>
-        </div>
+        <button class="status-close" aria-label="Close status message">&times;</button>
       </div>
-    </section>
 
-    <!-- Subscription Section -->
-    <section class="panel" id="subscriptionPanel" style="display: none;">
-      <div class="panel-header">
-        <h2>💎 Subscription</h2>
-        <button id="refreshSubscriptionBtn">Refresh</button>
-      </div>
-      <div id="subscriptionContent" class="subscription-content">
-        <div id="subscriptionInfo" class="subscription-info">
-          <p>No active subscription</p>
+      <!-- Store Section -->
+      <section id="store-section" class="content-section active" role="region" aria-labelledby="store-title">
+        <div class="section-header">
+          <h2 id="store-title" class="section-title">Game Store</h2>
+          <p class="section-subtitle">Discover and purchase amazing games from our curated collection</p>
         </div>
+
+        <!-- Store Controls -->
+        <div class="store-controls card">
+          <div class="controls-grid">
+            <div class="form-group">
+              <label for="categoryFilter" class="form-label">Category</label>
+              <select id="categoryFilter" class="form-input" aria-describedby="category-help">
+                <option value="">All Categories</option>
+                <option value="RPG">RPG</option>
+                <option value="Action">Action</option>
+                <option value="FPS">FPS</option>
+                <option value="Sports">Sports</option>
+                <option value="MOBA">MOBA</option>
+                <option value="Sandbox">Sandbox</option>
+                <option value="Multiplayer">Multiplayer</option>
+                <option value="Party">Party</option>
+              </select>
+              <div id="category-help" class="form-help">Filter games by category</div>
+            </div>
+            
+            <div class="form-group">
+              <label for="searchInput" class="form-label">Search</label>
+              <div class="search-container">
+                <input 
+                  id="searchInput" 
+                  type="search" 
+                  class="form-input" 
+                  placeholder="Search games..." 
+                  aria-describedby="search-help"
+                  autocomplete="off"
+                >
+                <button id="searchBtn" class="btn btn-secondary" aria-label="Search games">
+                  <span class="btn-text">Search</span>
+                </button>
+              </div>
+              <div id="search-help" class="form-help">Search by game title or description</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Games Grid -->
+        <div class="games-container">
+          <div id="games-loading" class="loading-state" style="display: none;">
+            <div class="loading-spinner">
+              <div class="spinner"></div>
+              <p>Loading games...</p>
+            </div>
+          </div>
+          
+          <div id="games-grid" class="games-grid" role="grid" aria-label="Available games">
+            <!-- Games will be loaded here -->
+          </div>
+          
+          <div id="games-empty" class="empty-state" style="display: none;">
+            <div class="empty-icon" aria-hidden="true">🎮</div>
+            <h3>No games found</h3>
+            <p>Try adjusting your search or filter criteria</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Profile Section -->
+      <section id="profile-section" class="content-section" role="region" aria-labelledby="profile-title">
+        <div class="section-header">
+          <h2 id="profile-title" class="section-title">My Profile</h2>
+          <p class="section-subtitle">Manage your account and wallet</p>
+        </div>
+
+        <div class="profile-layout">
+          <!-- Profile Stats -->
+          <div class="profile-stats card">
+            <h3 class="card-title">Account Statistics</h3>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <div class="stat-icon" aria-hidden="true">💰</div>
+                <div class="stat-value" id="walletBalance">$0.00</div>
+                <div class="stat-label">Wallet Balance</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-icon" aria-hidden="true">🎮</div>
+                <div class="stat-value" id="gamesOwned">0</div>
+                <div class="stat-label">Games Owned</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-icon" aria-hidden="true">💸</div>
+                <div class="stat-value" id="totalSpent">$0.00</div>
+                <div class="stat-label">Total Spent</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-icon" aria-hidden="true">👑</div>
+                <div class="stat-value" id="premiumStatus">No</div>
+                <div class="stat-label">Premium Member</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Wallet Management -->
+          <div class="wallet-management card">
+            <h3 class="card-title">Wallet Management</h3>
+            <div class="form-group">
+              <label for="walletAmount" class="form-label">Add Funds</label>
+              <div class="input-group">
+                <span class="input-prefix" aria-hidden="true">$</span>
+                <input 
+                  id="walletAmount" 
+                  type="number" 
+                  class="form-input" 
+                  placeholder="0.00" 
+                  step="0.01" 
+                  min="0" 
+                  max="1000"
+                  aria-describedby="wallet-help"
+                >
+              </div>
+              <div id="wallet-help" class="form-help">Enter amount to add to your wallet (max $1000)</div>
+            </div>
+            <button id="addWalletBtn" class="btn btn-primary magnetic-btn">
+              <span class="btn-text">Add to Wallet</span>
+              <span class="btn-loading" aria-hidden="true">Adding...</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Subscription Section -->
+      <section id="subscription-section" class="content-section" role="region" aria-labelledby="subscription-title">
+        <div class="section-header">
+          <h2 id="subscription-title" class="section-title">Subscription Plans</h2>
+          <p class="section-subtitle">Choose the perfect plan for your gaming needs</p>
+        </div>
+
+        <!-- Current Subscription -->
+        <div id="current-subscription" class="current-subscription card" style="display: none;">
+          <h3 class="card-title">Current Subscription</h3>
+          <div id="subscription-info" class="subscription-info">
+            <!-- Current subscription details will be loaded here -->
+          </div>
+          <button id="cancelSubscriptionBtn" class="btn btn-secondary">
+            <span class="btn-text">Cancel Subscription</span>
+          </button>
+        </div>
+
+        <!-- Subscription Plans -->
         <div class="subscription-plans">
-          <div class="plan">
-            <h3>Basic</h3>
-            <div class="price">$9.99/month</div>
-            <ul>
+          <div class="subscription-card" data-plan="BASIC">
+            <div class="plan-header">
+              <h3 class="plan-name">Basic</h3>
+              <div class="plan-price">
+                <span class="price-currency">$</span>
+                <span class="price-amount">9.99</span>
+                <span class="price-period">/month</span>
+              </div>
+            </div>
+            <ul class="plan-features" role="list">
               <li>Access to free games</li>
               <li>Basic support</li>
+              <li>Standard download speeds</li>
             </ul>
-            <button class="subscribe-btn" data-plan="BASIC">Subscribe</button>
+            <button class="btn btn-primary subscribe-btn magnetic-btn" data-plan="BASIC">
+              <span class="btn-text">Subscribe</span>
+              <span class="btn-loading" aria-hidden="true">Subscribing...</span>
+            </button>
           </div>
-          <div class="plan">
-            <h3>Premium</h3>
-            <div class="price">$19.99/month</div>
-            <ul>
+
+          <div class="subscription-card featured" data-plan="PREMIUM">
+            <div class="plan-badge">Most Popular</div>
+            <div class="plan-header">
+              <h3 class="plan-name">Premium</h3>
+              <div class="plan-price">
+                <span class="price-currency">$</span>
+                <span class="price-amount">19.99</span>
+                <span class="price-period">/month</span>
+              </div>
+            </div>
+            <ul class="plan-features" role="list">
               <li>All Basic features</li>
               <li>Premium games library</li>
               <li>Priority support</li>
+              <li>Faster download speeds</li>
+              <li>Cloud saves</li>
             </ul>
-            <button class="subscribe-btn" data-plan="PREMIUM">Subscribe</button>
+            <button class="btn btn-primary subscribe-btn magnetic-btn" data-plan="PREMIUM">
+              <span class="btn-text">Subscribe</span>
+              <span class="btn-loading" aria-hidden="true">Subscribing...</span>
+            </button>
           </div>
-          <div class="plan">
-            <h3>Ultimate</h3>
-            <div class="price">$29.99/month</div>
-            <ul>
+
+          <div class="subscription-card" data-plan="ULTIMATE">
+            <div class="plan-header">
+              <h3 class="plan-name">Ultimate</h3>
+              <div class="plan-price">
+                <span class="price-currency">$</span>
+                <span class="price-amount">29.99</span>
+                <span class="price-period">/month</span>
+              </div>
+            </div>
+            <ul class="plan-features" role="list">
               <li>All Premium features</li>
               <li>Early access to new games</li>
               <li>Exclusive content</li>
+              <li>24/7 premium support</li>
+              <li>Unlimited cloud storage</li>
+              <li>Beta access</li>
             </ul>
-            <button class="subscribe-btn" data-plan="ULTIMATE">Subscribe</button>
+            <button class="btn btn-primary subscribe-btn magnetic-btn" data-plan="ULTIMATE">
+              <span class="btn-text">Subscribe</span>
+              <span class="btn-loading" aria-hidden="true">Subscribing...</span>
+            </button>
           </div>
         </div>
-        <button id="cancelSubscriptionBtn" style="display: none;">Cancel Subscription</button>
-      </div>
-    </section>
+      </section>
 
-    <!-- Game Store Section -->
-    <section class="panel">
-      <div class="panel-header">
-        <h2>🛒 Game Store</h2>
-        <div class="store-controls">
-          <select id="categoryFilter">
-            <option value="">All Categories</option>
-            <option value="RPG">RPG</option>
-            <option value="Action">Action</option>
-            <option value="FPS">FPS</option>
-            <option value="Sports">Sports</option>
-            <option value="MOBA">MOBA</option>
-            <option value="Sandbox">Sandbox</option>
-            <option value="Multiplayer">Multiplayer</option>
-            <option value="Party">Party</option>
-          </select>
-          <input id="searchInput" type="text" placeholder="Search games...">
-          <button id="searchBtn">Search</button>
+      <!-- Library Section -->
+      <section id="library-section" class="content-section" role="region" aria-labelledby="library-title">
+        <div class="section-header">
+          <h2 id="library-title" class="section-title">My Games</h2>
+          <p class="section-subtitle">Your personal game library</p>
         </div>
-      </div>
-      <div id="gamesGrid" class="games-grid">
-        <!-- Games will be loaded here -->
-      </div>
-    </section>
 
-    <!-- My Games Section -->
-    <section class="panel" id="myGamesPanel" style="display: none;">
-      <div class="panel-header">
-        <h2>🎯 My Games</h2>
-        <button id="refreshPurchasesBtn">Refresh</button>
-      </div>
-      <div id="purchasesList" class="purchases-list">
-        <!-- Purchases will be loaded here -->
-      </div>
-    </section>
-
-    <!-- Analytics Section -->
-    <section class="panel">
-      <div class="panel-header">
-        <h2>📊 Store Analytics</h2>
-        <button id="refreshStatsBtn">Refresh</button>
-      </div>
-      <div id="analyticsContent" class="analytics-content">
-        <div class="stats-grid">
-          <div class="stat-card">
-            <h3>Top Spenders</h3>
-            <div id="topSpenders" class="stat-list"></div>
+        <div class="library-container">
+          <div id="library-loading" class="loading-state" style="display: none;">
+            <div class="loading-spinner">
+              <div class="spinner"></div>
+              <p>Loading your games...</p>
+            </div>
           </div>
-          <div class="stat-card">
-            <h3>Top Buyers</h3>
-            <div id="topBuyers" class="stat-list"></div>
+          
+          <div id="purchases-list" class="purchases-list" role="list" aria-label="Your purchased games">
+            <!-- Purchased games will be loaded here -->
           </div>
-          <div class="stat-card">
-            <h3>Store Stats</h3>
-            <div id="storeStats" class="stat-list"></div>
+          
+          <div id="library-empty" class="empty-state" style="display: none;">
+            <div class="empty-icon" aria-hidden="true">🎮</div>
+            <h3>No games yet</h3>
+            <p>Start building your collection by purchasing games from the store</p>
+            <button class="btn btn-primary" onclick="switchSection('store')">
+              <span class="btn-text">Browse Games</span>
+            </button>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      <!-- Analytics Section -->
+      <section id="analytics-section" class="content-section" role="region" aria-labelledby="analytics-title">
+        <div class="section-header">
+          <h2 id="analytics-title" class="section-title">Store Analytics</h2>
+          <p class="section-subtitle">Insights into gaming trends and statistics</p>
+        </div>
+
+        <div class="analytics-grid">
+          <div class="analytics-card">
+            <div class="analytics-icon" aria-hidden="true">💰</div>
+            <div class="analytics-value" id="totalRevenue">$0</div>
+            <div class="analytics-label">Total Revenue</div>
+          </div>
+          
+          <div class="analytics-card">
+            <div class="analytics-icon" aria-hidden="true">👥</div>
+            <div class="analytics-value" id="totalUsers">0</div>
+            <div class="analytics-label">Total Users</div>
+          </div>
+          
+          <div class="analytics-card">
+            <div class="analytics-icon" aria-hidden="true">🎮</div>
+            <div class="analytics-value" id="totalGames">0</div>
+            <div class="analytics-label">Games Available</div>
+          </div>
+          
+          <div class="analytics-card">
+            <div class="analytics-icon" aria-hidden="true">💎</div>
+            <div class="analytics-value" id="activeSubscriptions">0</div>
+            <div class="analytics-label">Active Subscriptions</div>
+          </div>
+        </div>
+
+        <div class="analytics-details">
+          <div class="analytics-card">
+            <h3 class="card-title">Top Spenders</h3>
+            <div id="topSpenders" class="stat-list" role="list" aria-label="Top spending users">
+              <!-- Top spenders will be loaded here -->
+            </div>
+          </div>
+          
+          <div class="analytics-card">
+            <h3 class="card-title">Top Buyers</h3>
+            <div id="topBuyers" class="stat-list" role="list" aria-label="Most active buyers">
+              <!-- Top buyers will be loaded here -->
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   </main>
 
-  <footer class="container footer">
-    <p>🎮 <strong>GameStore</strong> - Your digital gaming hub powered by Spring Boot & MongoDB Atlas</p>
-    <p>Buy games, manage subscriptions, and track your gaming journey!</p>
+  <!-- Footer -->
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <h3 class="footer-title">
+            <span class="footer-icon" aria-hidden="true">🎮</span>
+            GameStore
+          </h3>
+          <p class="footer-description">Your digital gaming hub powered by Spring Boot & MongoDB Atlas</p>
+        </div>
+        <div class="footer-links">
+          <a href="#" class="footer-link" aria-label="About GameStore">About</a>
+          <a href="#" class="footer-link" aria-label="Contact support">Support</a>
+          <a href="#" class="footer-link" aria-label="Privacy policy">Privacy</a>
+          <a href="#" class="footer-link" aria-label="Terms of service">Terms</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 GameStore. All rights reserved.</p>
+      </div>
+    </div>
   </footer>
 
-  <canvas id="confetti"></canvas>
-  <script src="/app.js"></script>
+  <!-- Hidden descriptions for screen readers -->
+  <div class="sr-only">
+    <div id="store-desc">Browse and purchase games from our collection</div>
+    <div id="profile-desc">View and manage your account information</div>
+    <div id="subscription-desc">Manage your subscription plans</div>
+    <div id="library-desc">View your purchased games</div>
+    <div id="analytics-desc">View store statistics and analytics</div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/js/config.js"></script>
+  <script src="/js/utils.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/animations.js"></script>
+  <script src="/js/gamestore.js"></script>
+  <script src="/js/user.js"></script>
+  <script src="/js/subscription.js"></script>
+  <script src="/js/library.js"></script>
+  <script src="/js/analytics.js"></script>
+  <script src="/js/events.js"></script>
+  <script src="/js/app.js"></script>
 </body>
 </html>

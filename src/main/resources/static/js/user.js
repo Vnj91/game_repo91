@@ -4,16 +4,22 @@
 const userProfile = {
   async createUserProfile() {
     const username = utils.$('#playerName').value.trim();
+    const button = utils.$('#createProfileBtn');
+    const feedback = utils.$('#username-feedback');
     const validationError = utils.validateUsername(username);
     
     if (validationError) {
+      feedback.textContent = validationError;
+      feedback.className = 'input-feedback error';
       ui.showStatus(validationError, 'error');
       utils.$('#playerName').focus();
       return;
     }
     
     try {
-      ui.showLoading(utils.$('#createProfileBtn'));
+      // Show loading state
+      button.classList.add('loading');
+      button.disabled = true;
       
       const profile = await api.createUser({
         username: username,
@@ -21,19 +27,34 @@ const userProfile = {
         fullName: username
       });
       
-      state.currentUser = username;
-      this.updateAuthUI();
-      ui.showStatus(`Profile created for ${username}`, 'success');
+      // Show success state
+      button.classList.remove('loading');
+      button.classList.add('success');
       
-      await this.loadUserProfile();
-      await userSubscription.loadUserSubscription();
-      await userLibrary.loadUserPurchases();
+      // Wait for success animation, then switch UI
+      setTimeout(() => {
+        state.currentUser = username;
+        this.updateAuthUI();
+        ui.showStatus(`Welcome to GameStore, ${username}!`, 'success');
+        
+        // Load user data
+        this.loadUserProfile();
+        userSubscription.loadUserSubscription();
+        userLibrary.loadUserPurchases();
+        
+        // Reset button state
+        button.classList.remove('success');
+        button.disabled = false;
+      }, 1500);
       
     } catch (error) {
       console.error('Failed to create profile:', error);
+      button.classList.remove('loading');
+      button.disabled = false;
+      
+      feedback.textContent = `Failed to create profile: ${error.message}`;
+      feedback.className = 'input-feedback error';
       ui.showStatus('Failed to create profile. Please try again.', 'error');
-    } finally {
-      ui.hideLoading(utils.$('#createProfileBtn'));
     }
   },
   
@@ -53,7 +74,8 @@ const userProfile = {
     if (state.currentUser) {
       utils.$('#auth-form').style.display = 'none';
       utils.$('#user-info').style.display = 'flex';
-      utils.$('#current-user-name').textContent = state.currentUser;
+      utils.$('#current-user-name').textContent = state.currentUser.charAt(0).toUpperCase();
+      utils.$('#current-user-name-full').textContent = state.currentUser;
     } else {
       utils.$('#auth-form').style.display = 'flex';
       utils.$('#user-info').style.display = 'none';

@@ -17,6 +17,47 @@ const eventHandlers = {
       userProfile.createUserProfile();
     });
     
+    // Enhanced input validation with real-time feedback
+    const usernameInput = utils.$('#playerName');
+    const feedback = utils.$('#username-feedback');
+    
+    if (usernameInput && feedback) {
+      usernameInput.addEventListener('input', (e) => {
+        const value = e.target.value.trim();
+        const button = utils.$('#createProfileBtn');
+        
+        if (value.length === 0) {
+          feedback.textContent = '';
+          feedback.className = 'input-feedback';
+          button.disabled = true;
+        } else if (value.length < 3) {
+          feedback.textContent = 'Username must be at least 3 characters';
+          feedback.className = 'input-feedback error';
+          button.disabled = true;
+        } else if (value.length > 24) {
+          feedback.textContent = 'Username must be no more than 24 characters';
+          feedback.className = 'input-feedback error';
+          button.disabled = true;
+        } else if (!/^[a-zA-Z0-9_-]+$/.test(value)) {
+          feedback.textContent = 'Username can only contain letters, numbers, underscores, and hyphens';
+          feedback.className = 'input-feedback error';
+          button.disabled = true;
+        } else {
+          feedback.textContent = 'Username looks good!';
+          feedback.className = 'input-feedback success';
+          button.disabled = false;
+        }
+      });
+      
+      // Allow Enter key to submit
+      usernameInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !utils.$('#createProfileBtn').disabled) {
+          e.preventDefault();
+          userProfile.createUserProfile();
+        }
+      });
+    }
+    
     utils.$('#logoutBtn').addEventListener('click', (e) => {
       e.preventDefault();
       userProfile.logout();
